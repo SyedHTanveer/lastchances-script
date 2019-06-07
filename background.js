@@ -9,53 +9,53 @@
 // a message object and send it back to conent.js to be rendered onto the page.
 
 chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
+  (request, sender, sendResponse) => {
     $.ajax({
-    url: request.text,
-        type:'GET',
-        success: function(data) {
+      url: request.text,
+      type: 'GET',
+      success(data) {
+        const message = {
+          summary: '',
+          title: '',
+        };
 
-          let message = {
-            summary: '',
-            title: ''
-          };
+        let leg_Summary = $(data).find('#summarySelector').html(); // assigns the HTML for summary to a variable
+        let leg_Title = $(data).filter('title').text(); // assigns the Title of the legislation to a variable
 
-           let leg_Summary = $(data).find('#summarySelector').html(); // assigns the HTML for summary to a variable
-           let leg_Title = $(data).filter('title').text(); // assigns the Title of the legislation to a variable
+        console.log(leg_Title);
+        console.log(leg_Summary);
 
-           console.log(leg_Title);
-           console.log(leg_Summary);
+        let endpoint = 0; // this variable will be used to hold the index of where the string will be parsed to.
 
-           let endpoint = 0; // this variable will be used to hold the index of where the string will be parsed to.
-
-           // iterates through the summary string to delete the CRS link and cleans the text up for proper display
-           for (i=0; i < leg_Summary.length; i++) {
-             if(leg_Summary[i] == '.' && leg_Summary[i-1] == request.leg[request.leg.length-1]) {
-               endpoint = i;
-               break;
-             }
-           }
-
-           leg_Summary = leg_Summary.slice(4, endpoint); // creates the new string that will be displayed
-
-           // iterates through the title string to delete the tags and uneeded text for proper display
-           for (i=0; i < leg_Title.length; i++) {
-             if(leg_Title[i] == '|') {
-               endpoint = i-1;
-               break;
-             }
-           }
-
-           leg_Title = leg_Title.slice(7, endpoint); // creates the new string that will be displayed
-
-           // adding the newely parsed strings to the message we will send to content.js
-           message.summary = leg_Summary;
-           message.title = leg_Title;
-
-           chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-             console.log(message);
-             chrome.tabs.sendMessage(tabs[0].id, message); // sends the message to content.js
-         });
+        // iterates through the summary string to delete the CRS link and cleans the text up for proper display
+        for (i = 0; i < leg_Summary.length; i++) {
+          if (leg_Summary[i] == '.' && leg_Summary[i - 1] == request.leg[request.leg.length - 1]) {
+            endpoint = i;
+            break;
+          }
         }
+
+        leg_Summary = leg_Summary.slice(4, endpoint); // creates the new string that will be displayed
+
+        // iterates through the title string to delete the tags and uneeded text for proper display
+        for (i = 0; i < leg_Title.length; i++) {
+          if (leg_Title[i] == '|') {
+            endpoint = i - 1;
+            break;
+          }
+        }
+
+        leg_Title = leg_Title.slice(7, endpoint); // creates the new string that will be displayed
+
+        // adding the newely parsed strings to the message we will send to content.js
+        message.summary = leg_Summary;
+        message.title = leg_Title;
+
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          console.log(message);
+          chrome.tabs.sendMessage(tabs[0].id, message); // sends the message to content.js
+        });
+      },
     });
-});
+  },
+);
