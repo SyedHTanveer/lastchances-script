@@ -10,52 +10,30 @@
 
 chrome.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
-    $.ajax({
-      url: request.text,
-      type: 'GET',
-      success(data) {
-        const message = {
-          summary: '',
-          title: '',
-        };
-
-        let leg_Summary = $(data).find('#summarySelector').html(); // assigns the HTML for summary to a variable
-        let leg_Title = $(data).filter('title').text(); // assigns the Title of the legislation to a variable
-
-        console.log(leg_Title);
-        console.log(leg_Summary);
-
-        let endpoint = 0; // this variable will be used to hold the index of where the string will be parsed to.
-
-        // iterates through the summary string to delete the CRS link and cleans the text up for proper display
-        for (i = 0; i < leg_Summary.length; i++) {
-          if (leg_Summary[i] == '.' && leg_Summary[i - 1] == request.leg[request.leg.length - 1]) {
-            endpoint = i;
-            break;
-          }
-        }
-
-        leg_Summary = leg_Summary.slice(4, endpoint); // creates the new string that will be displayed
-
-        // iterates through the title string to delete the tags and uneeded text for proper display
-        for (i = 0; i < leg_Title.length; i++) {
-          if (leg_Title[i] == '|') {
-            endpoint = i - 1;
-            break;
-          }
-        }
-
-        leg_Title = leg_Title.slice(7, endpoint); // creates the new string that will be displayed
-
-        // adding the newely parsed strings to the message we will send to content.js
-        message.summary = leg_Summary;
-        message.title = leg_Title;
-
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          console.log(message);
-          chrome.tabs.sendMessage(tabs[0].id, message); // sends the message to content.js
-        });
-      },
+    $(document).ready(() => {
+      $.ajax({
+        type: 'GET',
+        url: 'data.txt',
+        dataType: 'text',
+        success(data) { processData(data); },
+      });
     });
+
+    function processData(allText) {
+      const record_num = 5; // or however many elements there are in each row
+      const allTextLines = allText.split(/\r\n|\n/);
+      const entries = allTextLines[0].split(',');
+      const lines = [];
+
+      const headings = entries.splice(0, record_num);
+      while (entries.length > 0) {
+        const tarr = [];
+        for (let j = 0; j < record_num; j++) {
+          tarr.push(`${headings[j]}:${entries.shift()}`);
+        }
+        lines.push(tarr);
+      }
+      // alert(lines);
+    }
   },
 );
